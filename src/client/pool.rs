@@ -629,14 +629,14 @@ impl<T: Poolable> Checkout<T> {
                     if value.is_open() {
                         Ok(Async::Ready(Some(self.pool.reuse(&self.key, value))))
                     } else {
-                        Err(::Error::new_canceled(Some(CANCELED)))
+                        Err(::Error::new_canceled().with(CANCELED))
                     }
                 },
                 Ok(Async::NotReady) => {
                     self.waiter = Some(rx);
                     Ok(Async::NotReady)
                 },
-                Err(_canceled) => Err(::Error::new_canceled(Some(CANCELED))),
+                Err(_canceled) => Err(::Error::new_canceled().with(CANCELED)),
             }
         } else {
             Ok(Async::Ready(None))
@@ -669,7 +669,7 @@ impl<T: Poolable> Future for Checkout<T> {
         if let Some(pooled) = entry {
             Ok(Async::Ready(pooled))
         } else if !self.pool.is_enabled() {
-            Err(::Error::new_canceled(Some("pool is disabled")))
+            Err(::Error::new_canceled().with("pool is disabled"))
         } else {
             self.add_waiter();
             Ok(Async::NotReady)
