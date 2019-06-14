@@ -180,7 +180,7 @@ impl<'a> Response<'a, Fresh> {
         let (version, body, status, headers) = self.deconstruct();
         let stream = match body_type {
             Body::Chunked => ChunkedWriter(body.into_inner()),
-            Body::Sized(len) => SizedWriter(body.into_inner(), len),
+            Body::Sized(len) => ThroughWriter(body.into_inner()),
             Body::Empty => EmptyWriter(body.into_inner()),
         };
 
@@ -243,7 +243,7 @@ impl<'a, T: Any> Drop for Response<'a, T> {
 
             let mut body = match self.write_head() {
                 Ok(Body::Chunked) => ChunkedWriter(self.body.get_mut()),
-                Ok(Body::Sized(len)) => SizedWriter(self.body.get_mut(), len),
+                Ok(Body::Sized(len)) => ThroughWriter(self.body.get_mut()),
                 Ok(Body::Empty) => EmptyWriter(self.body.get_mut()),
                 Err(e) => {
                     debug!("error dropping request: {:?}", e);
